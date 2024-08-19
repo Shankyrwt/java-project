@@ -1,12 +1,12 @@
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from jira import JIRA
 from notion_client import Client
 import sys
 import requests
 from jira.exceptions import JIRAError
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv()
 
 def get_jira_tickets(sprint_name):
     try:

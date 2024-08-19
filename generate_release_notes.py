@@ -62,7 +62,7 @@ def generate_release_notes(sprint_name):
     # Create Notion page
     create_notion_page(sprint_name, content)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     sprint_name = sys.argv[1]
     generate_release_notes(sprint_name)
 

@@ -11,7 +11,7 @@ def get_jira_tickets(sprint_name):
     )
     
     # Adjust this query based on your project type
-    jql_query = f'sprint = "{sprint_name}" AND project = "YOUR_PROJECT"'
+    jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM"'
     
     try:
         issues = jira.search_issues(jql_query)

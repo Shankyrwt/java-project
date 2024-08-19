@@ -6,19 +6,18 @@ from notion_client import Client
 from jira.exceptions import JIRAError
 
 def get_jira_tickets(sprint_name):
-    try:
-        jira = JIRA(
-            server=os.environ['JIRA_URL'],
-            basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])
-        )
+      try:
+        # Connect to JIRA
+        jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN']))
         
-        # Correcting the JQL query with the right project key and sprint field
+        # Define JQL query
         jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM"'
+        
+        # Execute JQL query
         issues = jira.search_issues(jql_query)
         return issues
-
-    except jira.exceptions.JIRAError as e:
-        print(f"JiraError: {str(e)}")
+    except Exception as e:  # Catch any exception
+        print(f"Failed to retrieve JIRA tickets: {e}")
         return None
 
 def get_merged_prs():

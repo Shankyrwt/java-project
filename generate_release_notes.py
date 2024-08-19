@@ -5,23 +5,28 @@ from jira import JIRA
 from notion_client import Client
 
 def get_jira_tickets(sprint_name):
-    # Use basic authentication (email and API token)
     jira = JIRA(
         server=os.environ['JIRA_URL'],
         basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])
     )
-
-    # Example JQL query to get issues from the specified sprint
-    jql_query = f'sprint = "{sprint_name}"'
-    issues = jira.search_issues(jql_query)
-
-    # Convert issues to a list of ticket objects
-    tickets = [
-        {"key": issue.key, "summary": issue.fields.summary, "type": issue.fields.issuetype.name}
-        for issue in issues
-    ]
     
-    return tickets
+    # Adjust this query based on your project type
+    jql_query = f'sprint = "{sprint_name}" AND project = "YOUR_PROJECT"'
+    
+    try:
+        issues = jira.search_issues(jql_query)
+        tickets = []
+        for issue in issues:
+            tickets.append({
+                'key': issue.key,
+                'summary': issue.fields.summary,
+                'type': issue.fields.issuetype.name
+            })
+        return tickets
+    except jira.exceptions.JIRAError as e:
+        print(f"JiraError: {e}")
+        return []
+
 
 def get_merged_prs():
     # Implement GitHub API call to get merged PRs

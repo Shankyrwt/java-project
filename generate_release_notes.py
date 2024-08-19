@@ -3,34 +3,29 @@ import sys
 import requests
 from jira import JIRA
 from notion_client import Client
+from jira.exceptions import JIRAError
 
 def get_jira_tickets(sprint_name):
-    jira = JIRA(
-        server=os.environ['JIRA_URL'],
-        basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])
-    )
-    
-    # Adjust this query based on your project type
-    jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM"'
-    
     try:
+        jira = JIRA(
+            server=os.environ['JIRA_URL'],
+            basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])
+        )
+        
+        # Ensure the project key and sprint are correct
+        project_key = "SCRUM"  # Replace with your actual project key
+        jql_query = f'sprint = "{sprint_name}" AND project = "{project_key}"'
+        
         issues = jira.search_issues(jql_query)
-        tickets = []
-        for issue in issues:
-            tickets.append({
-                'key': issue.key,
-                'summary': issue.fields.summary,
-                'type': issue.fields.issuetype.name
-            })
+        tickets = [{"key": issue.key, "summary": issue.fields.summary, "type": issue.fields.issuetype.name} for issue in issues]
         return tickets
-    except jira.exceptions.JIRAError as e:
+    
+    except JIRAError as e:
         print(f"JiraError: {e}")
-        return []
-
+        return None
 
 def get_merged_prs():
     # Implement GitHub API call to get merged PRs
-    # Return a list of PR objects
     pass
 
 def create_notion_page(sprint_name, content):
@@ -52,13 +47,16 @@ def create_notion_page(sprint_name, content):
         ]
     )
     
-    print(f"Notion page created: {new_page.url}")
+    print(f"Notion page created: {new_page['url']}")
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
+    if tickets is None:
+        print("Failed to retrieve JIRA tickets.")
+        return
+    
     prs = get_merged_prs()
     
-    # Generate release notes content
     content = f"Release Notes for {sprint_name}\n\n"
     content += "Features:\n"
     for ticket in tickets:
@@ -74,11 +72,9 @@ def generate_release_notes(sprint_name):
     for pr in prs:
         content += f"- {pr['title']} (#{pr['number']})\n"
     
-    # Write content to a file for GitHub release
     with open("release_notes.md", "w") as f:
         f.write(content)
     
-    # Create Notion page
     create_notion_page(sprint_name, content)
 
 if __name__ == "__main__":

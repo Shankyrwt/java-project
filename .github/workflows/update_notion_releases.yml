@@ -25,6 +25,7 @@ jobs:
 
       - name: Generate release notes
         env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
         run: |
@@ -33,7 +34,7 @@ jobs:
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.event.inputs.sprint_name }}
           release_name: Release ${{ github.event.inputs.sprint_name }}

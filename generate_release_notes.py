@@ -6,7 +6,6 @@ from notion_client import Client
 from jira.exceptions import JIRAError
 
 def get_jira_tickets(sprint_name):
-def get_jira_tickets(sprint_name):
     try:
         jira = JIRA(
             server=os.environ['JIRA_URL'],

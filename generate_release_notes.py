@@ -14,7 +14,7 @@ def get_jira_tickets(sprint_name):
         jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN']))
         
         # Define JQL query
-        jql_query = f'sprint = "{sprint_name}" AND project = {os.environ["JIRA_PROJECT_NAME"]}'
+        jql_query = f'sprint = "{sprint_name}" AND project = "{os.environ['JIRA_PROJECT_NAME']"}'
         
         # Execute JQL query
         issues = jira.search_issues(jql_query)

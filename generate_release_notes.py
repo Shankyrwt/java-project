@@ -5,14 +5,30 @@ from jira import JIRA
 from notion_client import Client
 
 def get_jira_tickets(sprint_name):
-    # Implement Jira API call to get tickets with the given sprint tag
-    # Return a list of ticket objects
-    pass
+    # Setup JIRA client
+    jira = JIRA(server=os.environ['JIRA_URL'], token_auth=os.environ['JIRA_API_TOKEN'])
+    
+    # JQL query to find issues in the specified sprint
+    jql_query = f'sprint = "{sprint_name}"'
+    
+    # Search for issues in the sprint
+    issues = jira.search_issues(jql_query)
+    
+    # Create a list of ticket objects with relevant data
+    tickets = []
+    for issue in issues:
+        tickets.append({
+            'key': issue.key,
+            'summary': issue.fields.summary,
+            'type': issue.fields.issuetype.name
+        })
+    
+    return tickets
 
 def get_merged_prs():
-    # Implement GitHub API call to get merged PRs
-    # Return a list of PR objects
-    pass
+    # Placeholder implementation returning an empty list
+    # Replace this with an actual API call to GitHub
+    return []
 
 def create_notion_page(sprint_name, content):
     notion = Client(auth=os.environ["NOTION_API_TOKEN"])
@@ -67,10 +83,10 @@ if __name__ == "__main__":
     generate_release_notes(sprint_name)
 
 # Setup JIRA client
-jira = JIRA(server=os.environ['JIRA_URL'], token=os.environ['JIRA_TOKEN'])
+jira = JIRA(server=os.environ['JIRA_URL'], token_auth=os.environ['JIRA_API_TOKEN'])
 
 # Setup Notion client
-notion = Client(auth=os.environ['NOTION_TOKEN'])
+notion = Client(auth=os.environ['NOTION_API_TOKEN'])
 
 # Fetch closed issues from JIRA sprint board
 jql_query = 'project = YOUR_PROJECT AND sprint in openSprints() AND status = Closed'
@@ -89,6 +105,3 @@ for issue in issues:
             # Add more properties as needed
         }
     )
-
-# If you want to include GitHub branch information, you'll need to use the GitHub API
-# This part depends on how your JIRA issues are linked to GitHub branches

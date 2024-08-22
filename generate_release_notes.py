@@ -98,7 +98,7 @@ def generate_release_notes(sprint_name):
     with open("release_notes.md", "w") as f:
         f.write(content)
     
-    # create_notion_page(sprint_name, content)
+    create_notion_page(sprint_name, content)
 
 if __name__ == "__main__":
     sprint_name = sys.argv[1]

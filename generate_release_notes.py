@@ -1,12 +1,7 @@
 import os
-# from dotenv import load_dotenv
 from jira import JIRA
-from notion_client import Client
 import sys
-import requests
 from jira.exceptions import JIRAError
-# Load environment variables from .env file
-# load_dotenv()
 
 def get_jira_tickets(sprint_name):
     try:
@@ -49,27 +44,6 @@ def extract_pr_details_from_jira_ticket(ticket):
             pr_details.append(pr_detail)
     return pr_details
 
-def create_notion_page(sprint_name, content):
-    notion = Client(auth=os.environ["NOTION_API_TOKEN"])
-    
-    new_page = notion.pages.create(
-        parent={"type": "workspace", "workspace": True},
-        properties={
-            "title": [{"text": {"content": f"Release Notes for {sprint_name}"}}]
-        },
-        children=[
-            {
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [{"type": "text", "text": {"content": content}}]
-                }
-            }
-        ]
-    )
-    
-    print(f"Notion page created: {new_page['url']}")
-
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
     if tickets is None:
@@ -92,14 +66,15 @@ def generate_release_notes(sprint_name):
             pr_details = extract_pr_details_from_jira_ticket(ticket)
             for pr in pr_details:
                 content += f"  - PR: {pr['title']} ({pr['url']}) merged by {pr['merged_by']} on {pr['merged_at']}\n"
-    # print content
-    print(f"{content}")
+    
+    print(content)
     
     with open("release_notes.md", "w") as f:
         f.write(content)
-    
-    create_notion_page(sprint_name, content)
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python script.py <sprint_name>")
+        sys.exit(1)
     sprint_name = sys.argv[1]
     generate_release_notes(sprint_name)

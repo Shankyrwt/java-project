@@ -34,7 +34,7 @@ def categorize_ticket(ticket):
     is_config = any(keyword in summary for keyword in config_keywords)
 
     # Ensure "configure" is not in the summary for config changes
-    if is_config and 'configure' in summary:
+    if 'configure' in summary:
         is_config = False
 
     # Determine which category to assign

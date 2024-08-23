@@ -35,8 +35,8 @@ def categorize_ticket(ticket):
         return 'bug'
     
     # Check if the summary contains the word "config"
-       config_keywords = ['config','configs']
-       if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
+    config_keywords = ['config', 'configs']
+    if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
         return 'config'
     
     # Default to 'feature'
@@ -44,7 +44,7 @@ def categorize_ticket(ticket):
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
-    if tickets is None:
+    if tickets are None:
         print("Failed to retrieve JIRA tickets.")
         return
     

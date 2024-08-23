@@ -27,12 +27,13 @@ def categorize_ticket(ticket):
         return 'bug'
     
     # Check if the summary contains keywords that typically indicate a bug fix
-    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve']
+    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve','revert']
     if any(keyword in ticket.fields.summary.lower() for keyword in bug_keywords):
         return 'bug'
     
     # Check if the summary contains the word "config"
-    if "config" in ticket.fields.summary.lower():
+       config_keywords = ['config']
+       if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
         return 'config'
     
     # Default to 'feature'

@@ -32,7 +32,7 @@ def categorize_ticket(ticket):
         return 'bug'
     
     # Check if the summary contains the word "config"
-       config_keywords = ['config']
+       config_keywords = ['config','configs']
        if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
         return 'config'
     

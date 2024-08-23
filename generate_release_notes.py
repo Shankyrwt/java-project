@@ -25,20 +25,25 @@ def categorize_ticket(ticket):
     # Keywords for categorization
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
     config_keywords = ['config', 'configs']
-    feature_keywords = ['add', 'new', 'improve', 'enhance', 'feature', 'create', 'implement']
 
     # Convert summary to lowercase for matching
     summary = ticket.fields.summary.lower()
-    categories = []
-
-    # Check for bug-related keywords
-    if any(keyword in summary for keyword in bug_keywords):
-        categories.append('bug')
     
-    # Check for config-related keywords
-    if any(keyword in summary for keyword in config_keywords):
-        categories.append('config')
+    # Determine categories
+    is_bug = any(keyword in summary for keyword in bug_keywords)
+    is_config = any(keyword in summary for keyword in config_keywords)
 
+    # Ensure "configure" is not in the summary for config changes
+    if is_config and 'configure' in summary:
+        is_config = False
+
+    # Determine which category to assign
+    categories = []
+    if is_bug:
+        categories.append('bug')
+    if is_config:
+        categories.append('config')
+    
     # If no categories matched, classify as feature
     if not categories:
         categories.append('feature')

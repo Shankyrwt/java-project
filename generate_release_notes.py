@@ -21,6 +21,19 @@ def get_jira_tickets(sprint_name):
         print(f"An unexpected error occurred: {str(e)}")
         return None
 
+def categorize_ticket(ticket):
+    # Basic categorization based on issue type
+    if ticket.fields.issuetype.name.lower() == 'bug':
+        return 'bug'
+    
+    # Check if the summary contains keywords that typically indicate a bug fix
+    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve']
+    if any(keyword in ticket.fields.summary.lower() for keyword in bug_keywords):
+        return 'bug'
+    
+    # Default to 'feature'
+    return 'feature'
+
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
     if tickets is None:
@@ -31,10 +44,11 @@ def generate_release_notes(sprint_name):
     bug_fixes = []
 
     for ticket in tickets:
-        if ticket.fields.issuetype.name.lower() == 'bug':
-            bug_fixes.append(f"-{ticket.key} {ticket.fields.summary}")
+        category = categorize_ticket(ticket)
+        if category == 'bug':
+            bug_fixes.append(f"- {ticket.key} {ticket.fields.summary}")
         else:
-            features.append(f"-{ticket.key} {ticket.fields.summary}")
+            features.append(f"- {ticket.key} {ticket.fields.summary}")
 
     content = f"Release Notes for {sprint_name}\n\n"
     

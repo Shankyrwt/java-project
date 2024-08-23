@@ -1,4 +1,5 @@
 name: Sprint Release Notes
+
 on:
   workflow_dispatch:
     inputs:
@@ -30,12 +31,14 @@ jobs:
         run: |
           python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
 
-      - name: Prepare tag name
+      - name: Prepare unique tag name
         id: prepare_tag
         run: |
           # Remove spaces and special characters, convert to lowercase
           TAG_NAME=$(echo "${{ github.event.inputs.sprint_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-zA-Z0-9]/-/g')
-          echo "TAG_NAME=v${TAG_NAME}" >> $GITHUB_OUTPUT
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          UNIQUE_TAG_NAME="${TAG_NAME}-${TIMESTAMP}"
+          echo "TAG_NAME=v${UNIQUE_TAG_NAME}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: actions/create-release@v1

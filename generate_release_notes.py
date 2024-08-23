@@ -27,7 +27,7 @@ def categorize_ticket(ticket):
         return 'bug'
 
     if ticket.fields.issuetype.name.lower() == 'config':
-        return 'bug'
+        return 'config'
     
     # Check if the summary contains keywords that typically indicate a bug fix
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve','revert']
@@ -44,7 +44,7 @@ def categorize_ticket(ticket):
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
-    if tickets are None:
+    if tickets is None:
         print("Failed to retrieve JIRA tickets.")
         return
     

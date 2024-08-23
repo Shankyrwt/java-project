@@ -1,4 +1,3 @@
-let today = new Date();nbnkn
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 let selectYear = document.getElementById("year");

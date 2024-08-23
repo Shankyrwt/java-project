@@ -25,6 +25,9 @@ def categorize_ticket(ticket):
     # Basic categorization based on issue type
     if ticket.fields.issuetype.name.lower() == 'bug':
         return 'bug'
+
+    if ticket.fields.issuetype.name.lower() == 'config':
+        return 'bug'
     
     # Check if the summary contains keywords that typically indicate a bug fix
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve','revert']

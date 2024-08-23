@@ -22,21 +22,27 @@ def get_jira_tickets(sprint_name):
         return None
 
 def categorize_ticket(ticket):
-    # Check if the issue type is 'bug'
-    if ticket.fields.issuetype.name.lower() == 'bug':
-        return 'bug'
-    
-    # Check if the summary contains keywords that indicate a bug fix
+    # Keywords for categorization
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
-    if any(keyword in ticket.fields.summary.lower() for keyword in bug_keywords):
+    config_keywords = ['config', 'configs', 'configuration']
+    feature_keywords = ['add', 'new', 'improve', 'enhance', 'feature', 'create', 'implement']
+
+    # Convert summary to lowercase for matching
+    summary = ticket.fields.summary.lower()
+
+    # Check for bug-related keywords
+    if any(keyword in summary for keyword in bug_keywords):
         return 'bug'
     
-    # Check if the summary contains the word "config"
-    config_keywords = ['config', 'configs']
-    if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
+    # Check for config-related keywords
+    if any(keyword in summary for keyword in config_keywords):
         return 'config'
+
+    # Check for feature-related keywords
+    if any(keyword in summary for keyword in feature_keywords):
+        return 'feature'
     
-    # Default to 'feature'
+    # Default to 'feature' if no keywords match
     return 'feature'
 
 def generate_release_notes(sprint_name):

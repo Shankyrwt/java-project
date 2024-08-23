@@ -34,7 +34,7 @@ def generate_release_notes(sprint_name):
     for ticket in tickets:
         summary = ticket.fields.summary.lower()
         if ticket.fields.issuetype.name.lower() == 'bug':
-            bug_fixes.append(f"- {ticket.key} {ticket.fields.summary}")
+            bugfixes.append(f"- {ticket.key} {ticket.fields.summary}")
         elif "config" in summary:
             config_changes.append(f"- {ticket.key} {ticket.fields.summary}")
         else:
@@ -46,9 +46,9 @@ def generate_release_notes(sprint_name):
         content += "Features:\n"
         content += "\n".join(features) + "\n\n"
     
-    if bug_fixes:
+    if bugfixes:
         content += "Bug Fixes:\n"
-        content += "\n".join(bug_fixes) + "\n\n"
+        content += "\n".join(bugfixes) + "\n\n"
 
     if config_changes:
         content += "Config Changes:\n"

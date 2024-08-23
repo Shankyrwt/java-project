@@ -9,40 +9,17 @@ def get_jira_tickets(sprint_name):
         jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN']))
         
         # Define JQL query
-        jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM"'
+        jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM" AND status = Done'
         
         # Execute JQL query
-        issues = jira.search_issues(jql_query)
+        issues = jira.search_issues(jql_query, maxResults=1000)
         return issues
-    except Exception as e:
-        print(f"Failed to retrieve JIRA tickets: {e}")
+    except JIRAError as e:
+        print(f"JIRA Error: {str(e)}")
         return None
-
-def find_pr_custom_field(ticket):
-    # Iterate over all custom fields to find PR details
-    for field_name, field_value in ticket.fields.__dict__.items():
-        if 'customfield_' in field_name and isinstance(field_value, list):
-            for item in field_value:
-                # Check if the item has PR-related keys
-                if isinstance(item, dict) and 'title' in item and 'url' in item:
-                    return field_name
-    return None
-
-def extract_pr_details_from_jira_ticket(ticket):
-    pr_details = []
-    custom_field_id = find_pr_custom_field(ticket)
-    
-    if custom_field_id:
-        for pr in ticket.fields.__dict__[custom_field_id]:
-            pr_detail = {
-                'title': pr.get('title', 'No Title'),
-                'url': pr.get('url', 'No URL'),
-                'status': pr.get('status', 'No Status'),
-                'merged_by': pr.get('author', {}).get('displayName', 'Unknown'),
-                'merged_at': pr.get('lastUpdate', 'Unknown Date')
-            }
-            pr_details.append(pr_detail)
-    return pr_details
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+        return None
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
@@ -50,22 +27,24 @@ def generate_release_notes(sprint_name):
         print("Failed to retrieve JIRA tickets.")
         return
     
+    features = []
+    bug_fixes = []
+
+    for ticket in tickets:
+        if ticket.fields.issuetype.name.lower() == 'bug':
+            bug_fixes.append(f"-{ticket.key} {ticket.fields.summary}")
+        else:
+            features.append(f"-{ticket.key} {ticket.fields.summary}")
+
     content = f"Release Notes for {sprint_name}\n\n"
-    content += "Features:\n"
-    for ticket in tickets:
-        if ticket.fields.issuetype.name == "Feature":
-            content += f"- {ticket.key} {ticket.fields.summary}\n"
-            pr_details = extract_pr_details_from_jira_ticket(ticket)
-            for pr in pr_details:
-                content += f"  - PR: {pr['title']} ({pr['url']}) merged by {pr['merged_by']} on {pr['merged_at']}\n"
     
-    content += "\nBug Fixes:\n"
-    for ticket in tickets:
-        if ticket.fields.issuetype.name == "Bug":
-            content += f"- {ticket.key} {ticket.fields.summary}\n"
-            pr_details = extract_pr_details_from_jira_ticket(ticket)
-            for pr in pr_details:
-                content += f"  - PR: {pr['title']} ({pr['url']}) merged by {pr['merged_by']} on {pr['merged_at']}\n"
+    if features:
+        content += "Features:\n"
+        content += "\n".join(features) + "\n\n"
+    
+    if bug_fixes:
+        content += "Bug Fixes:\n"
+        content += "\n".join(bug_fixes) + "\n"
     
     print(content)
     
@@ -74,7 +53,7 @@ def generate_release_notes(sprint_name):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python script.py <sprint_name>")
+        print("Usage: python generate_release_notes.py <sprint_name>")
         sys.exit(1)
     sprint_name = sys.argv[1]
     generate_release_notes(sprint_name)

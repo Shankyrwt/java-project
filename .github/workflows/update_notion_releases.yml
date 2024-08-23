@@ -1,5 +1,4 @@
 name: Sprint Release Notes
-
 on:
   workflow_dispatch:
     inputs:
@@ -21,23 +20,29 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests notion-client jira
+          pip install requests jira
 
       - name: Generate release notes
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
         run: |
-          python generate_release_notes.py ${{ github.event.inputs.sprint_name }}
+          python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
+
+      - name: Prepare tag name
+        id: prepare_tag
+        run: |
+          # Remove spaces and special characters, convert to lowercase
+          TAG_NAME=$(echo "${{ github.event.inputs.sprint_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-zA-Z0-9]/-/g')
+          echo "TAG_NAME=v${TAG_NAME}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.sprint_name }}
+          tag_name: ${{ steps.prepare_tag.outputs.TAG_NAME }}
           release_name: Release ${{ github.event.inputs.sprint_name }}
           body_path: release_notes.md
           draft: false

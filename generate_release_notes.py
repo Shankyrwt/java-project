@@ -22,15 +22,19 @@ def get_jira_tickets(sprint_name):
         return None
 
 def categorize_ticket(ticket):
+    # Check if the issue type is 'bug'
+    if ticket.fields.issuetype.name.lower() == 'bug':
+        return 'bug'
+    
+    # Check if the summary contains keywords that indicate a bug fix
+    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
+    if any(keyword in ticket.fields.summary.lower() for keyword in bug_keywords):
+        return 'bug'
+    
     # Check if the summary contains the word "config"
     config_keywords = ['config', 'configs']
     if any(keyword in ticket.fields.summary.lower() for keyword in config_keywords):
         return 'config'
-    
-    # Check if the issue type is 'bug' or summary contains bug-related keywords
-    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
-    if ticket.fields.issuetype.name.lower() == 'bug' or any(keyword in ticket.fields.summary.lower() for keyword in bug_keywords):
-        return 'bug'
     
     # Default to 'feature'
     return 'feature'

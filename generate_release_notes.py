@@ -24,26 +24,26 @@ def get_jira_tickets(sprint_name):
 def categorize_ticket(ticket):
     # Keywords for categorization
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
-    config_keywords = ['config', 'configs', 'configuration']
+    config_keywords = ['config', 'configs']
     feature_keywords = ['add', 'new', 'improve', 'enhance', 'feature', 'create', 'implement']
 
     # Convert summary to lowercase for matching
     summary = ticket.fields.summary.lower()
+    categories = []
 
     # Check for bug-related keywords
     if any(keyword in summary for keyword in bug_keywords):
-        return 'bug'
+        categories.append('bug')
     
     # Check for config-related keywords
     if any(keyword in summary for keyword in config_keywords):
-        return 'config'
+        categories.append('config')
 
-    # Check for feature-related keywords
-    if any(keyword in summary for keyword in feature_keywords):
-        return 'feature'
+    # If no categories matched, classify as feature
+    if not categories:
+        categories.append('feature')
     
-    # Default to 'feature' if no keywords match
-    return 'feature'
+    return categories
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
@@ -56,12 +56,12 @@ def generate_release_notes(sprint_name):
     config_changes = []
 
     for ticket in tickets:
-        category = categorize_ticket(ticket)
-        if category == 'bug':
+        categories = categorize_ticket(ticket)
+        if 'bug' in categories:
             bug_fixes.append(f"- {ticket.key} {ticket.fields.summary}")
-        elif category == 'config':
+        if 'config' in categories:
             config_changes.append(f"- {ticket.key} {ticket.fields.summary}")
-        else:
+        if 'feature' in categories:
             features.append(f"- {ticket.key} {ticket.fields.summary}")
 
     content = f"Release Notes for {sprint_name}\n\n"

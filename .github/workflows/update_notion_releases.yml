@@ -87,6 +87,13 @@ jobs:
           BRANCH_NAME="release/${NEW_VERSION}"
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
+
+          # Check if there are any changes to commit
+          if git diff --quiet; then
+            echo "No changes to commit. Exiting."
+            exit 0
+          fi
+
           git commit -am "Updated version references to ${NEW_VERSION}"
           git push --force origin "$BRANCH_NAME"
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV

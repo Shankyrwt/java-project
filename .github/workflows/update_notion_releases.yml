@@ -96,7 +96,7 @@ jobs:
 
           git commit -am "Updated version references to ${NEW_VERSION}"
           git push --force origin "$BRANCH_NAME"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV  # Set output for next job
 
   create-pull-request:
     needs: update-version-references

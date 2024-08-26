@@ -84,7 +84,7 @@ jobs:
       - name: Commit changes and create new branch
         id: create_branch
         run: |
-          BRANCH_NAME="release/${NEW_VERSION}"
+          BRANCH_NAME="release/${{ env.NEW_VERSION }}"
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
 
@@ -111,7 +111,7 @@ jobs:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH_NAME }}
           base: certain
-          title: "Release ${{ github.event.inputs.sprint_name }} - ${NEW_VERSION}"
+          title: "Release ${{ github.event.inputs.sprint_name }} - ${{ env.NEW_VERSION }}"
           body: |
             This PR merges the branch `${{ env.BRANCH_NAME }}` into `certain`.
 

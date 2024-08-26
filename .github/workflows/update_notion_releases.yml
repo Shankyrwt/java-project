@@ -81,56 +81,24 @@ jobs:
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-      - name: Commit changes and create new branch
-        id: create_branch
+      - name: Update version references
         run: |
-          BRANCH_NAME="release/${{ env.NEW_VERSION }}"
+          echo "Updating references from ${CURRENT_VERSION} to ${NEW_VERSION}"
+          # Update all files containing the old version
+          grep -rl "ref=${CURRENT_VERSION}" . | xargs sed -i "s/ref=${CURRENT_VERSION}/ref=${NEW_VERSION}/g"
+
+      - name: Commit changes and create new branch
+        run: |
+          BRANCH_NAME="release/${NEW_VERSION}"
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
-
-          # Check if there are any changes to commit
-          if git diff --quiet; then
-            echo "No changes to commit. Exiting."
-            exit 0
-          fi
-
           git commit -am "Updated version references to ${NEW_VERSION}"
-          git push --force origin "$BRANCH_NAME"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV  # Set output for next job
+          git push origin "$BRANCH_NAME"
 
-
-
-  create-pull-request:
+  notify:
     needs: update-version-references
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Create Pull Request
-        id: create_pr
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          commit-message: "Updated version references to ${NEW_VERSION}"
-          branch: "release/${NEW_VERSION}"
-          base: "certain"
-          title: "Release ${NEW_VERSION} - Merging into 'certain'"
-          body: |
-            This PR includes the following updates:
-            - Updated version references to ${NEW_VERSION}
-            - Release notes:
-            $(cat release_notes.md)
-
-      - name: Check for Merge Conflicts
-        run: |
-          git fetch origin certain
-          if ! git merge-base --is-ancestor origin/certain HEAD; then
-            echo "Merge conflict detected! Please resolve the conflict manually."
-            exit 1
-          fi
-
       - name: Send Slack Notification
         run: |
-          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch Release/${{ steps.prepare_tag.outputs.TAG_NAME }}"
-
+          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${NEW_VERSION}"

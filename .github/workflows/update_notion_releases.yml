@@ -1,28 +1,23 @@
 name: Sprint Release Notes and Version Update
-
 on:
   workflow_dispatch:
     inputs:
       sprint_name:
         description: 'Sprint name (e.g., Sprint5)'
         required: true
-
 jobs:
   create-release-notes:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-
       - name: Install dependencies
         run: |
           pip install requests jira
-
       - name: Generate release notes
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
@@ -30,7 +25,6 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
           python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
-
       - name: Prepare unique tag name
         id: prepare_tag
         run: |
@@ -39,7 +33,6 @@ jobs:
           UNIQUE_TAG_NAME="${TAG_NAME}-${TIMESTAMP}"
           echo "TAG_NAME=${UNIQUE_TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Branch name will be: Release/${UNIQUE_TAG_NAME}"
-
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
@@ -50,51 +43,43 @@ jobs:
           body_path: release_notes.md
           draft: false
           prerelease: false
-
-update-version-references:
-  needs: create-release-notes
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0  # This will fetch all history for all branches and tags
-
-    - name: Determine next version
-      id: determine_version
-      run: |
-        # List all .tf files
-        echo "Terraform files found:"
-        find . -name "*.tf" -type f
-        
-        # Find the current version by searching for the "ref=" pattern
-        CURRENT_VERSION=$(find . -name "*.tf" -type f | xargs grep -oP 'ref=v\d+\.\d+\.\d+' | head -n 1 | grep -oP 'v\d+\.\d+\.\d+' || echo "")
-        if [ -z "$CURRENT_VERSION" ]; then
-          echo "Warning: Could not find the current version. Setting to v0.0.0"
-          CURRENT_VERSION="v0.0.0"
-        fi
-        echo "Current version: $CURRENT_VERSION"
-        
-        # Increment the patch version (vX.Y.Z -> vX.Y.(Z+1))
-        NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-        echo "Next version: $NEW_VERSION"
-        
-        echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
-        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-
-    - name: Update version references
-      run: |
-        echo "Updating references from ${CURRENT_VERSION} to ${NEW_VERSION}"
-        # Update all files containing the old version
-        find . -name "*.tf" -type f | xargs sed -i "s/ref=${CURRENT_VERSION}/ref=${NEW_VERSION}/g"
-
-    - name: Commit changes and create new branch
-      run: |
-        BRANCH_NAME="release/${NEW_VERSION}"
-        echo "Creating branch: $BRANCH_NAME"
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git checkout -b "$BRANCH_NAME"
-        git add .
-        git commit -m "Updated version references to ${NEW_VERSION}" || echo "No changes to commit"
-        git push origin "$BRANCH_NAME" || echo "No changes to push"
+  update-version-references:
+    needs: create-release-notes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Determine next version
+        id: determine_version
+        run: |
+          # Find the current version by searching for the "ref=" pattern
+          CURRENT_VERSION=$(grep -oP 'ref=v\d+\.\d+\.\d+' */.tf | head -n 1 | grep -oP 'v\d+\.\d+\.\d+')
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo "Error: Could not find the current version."
+            exit 1
+          fi
+          echo "Current version: $CURRENT_VERSION"
+          # Increment the patch version (vX.Y.Z -> vX.Y.(Z+1))
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+          echo "Next version: $NEW_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+      - name: Update version references
+        run: |
+          echo "Updating references from ${CURRENT_VERSION} to ${NEW_VERSION}"
+          # Update all files containing the old version
+          grep -rl "ref=${CURRENT_VERSION}" . | xargs sed -i "s/ref=${CURRENT_VERSION}/ref=${NEW_VERSION}/g"
+      - name: Commit changes and create new branch
+        run: |
+          BRANCH_NAME="release/${NEW_VERSION}"
+          echo "Creating branch: $BRANCH_NAME"
+          git checkout -b "$BRANCH_NAME"
+          git commit -am "Updated version references to ${NEW_VERSION}"
+          git push origin "$BRANCH_NAME"
+  notify:
+    needs: update-version-references
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack Notification
+        run: |
+          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${NEW_VERSION}"

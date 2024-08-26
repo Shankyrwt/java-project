@@ -24,6 +24,7 @@ jobs:
           pip install requests jira
 
       - name: Generate release notes
+        id: generate_notes
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
@@ -38,7 +39,7 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           UNIQUE_TAG_NAME="${TAG_NAME}-${TIMESTAMP}"
           echo "TAG_NAME=${UNIQUE_TAG_NAME}" >> $GITHUB_OUTPUT
-          echo "Branch name will be: Release/${UNIQUE_TAG_NAME}"
+          echo "Branch name will be: release/${UNIQUE_TAG_NAME}"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -58,26 +59,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Git user
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-
       - name: Determine next version
         id: determine_version
         run: |
-          # Find the current version by searching for the "ref=" pattern in all .tf files recursively
-          CURRENT_VERSION=$(grep -oP 'ref=v\d+\.\d+\.\d+' $(find . -type f -name '*.tf') | head -n 1 | grep -oP 'v\d+\.\d+\.\d+')
+          # Find the current version by searching for the "ref=" pattern
+          CURRENT_VERSION=$(grep -oP 'ref=v\d+\.\d+\.\d+' **/*.tf | head -n 1 | grep -oP 'v\d+\.\d+\.\d+')
           if [ -z "$CURRENT_VERSION" ]; then
             echo "Error: Could not find the current version."
             exit 1
           fi
           echo "Current version: $CURRENT_VERSION"
-
           # Increment the patch version (vX.Y.Z -> vX.Y.(Z+1))
           NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
           echo "Next version: $NEW_VERSION"
-
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
@@ -95,10 +89,21 @@ jobs:
           git commit -am "Updated version references to ${NEW_VERSION}"
           git push origin "$BRANCH_NAME"
 
-  notify:
+  create-pull-request:
     needs: update-version-references
     runs-on: ubuntu-latest
     steps:
-      - name: Send Slack Notification
-        run: |
-          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${NEW_VERSION}"
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          base: certain  # Merge into the "certain" branch
+          head: release/${{ env.NEW_VERSION }}  # From the newly created release branch
+          title: "Release ${ env.NEW_VERSION }"
+          body: |
+            Release notes for ${ env.NEW_VERSION }:
+
+            ${{ steps.generate_notes.outputs.RELEASE_NOTES }}

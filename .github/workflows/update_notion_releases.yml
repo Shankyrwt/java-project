@@ -58,11 +58,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Determine next version
+        id: determine_version
+        run: |
+          # Find the current version by searching for the "ref=" pattern
+          CURRENT_VERSION=$(grep -oP 'ref=v\d+\.\d+\.\d+' **/*.tf | head -n 1 | grep -oP 'v\d+\.\d+\.\d+')
+          if [ -z "$CURRENT_VERSION" ]; then
+            echo "Error: Could not find the current version."
+            exit 1
+          fi
+          echo "Current version: $CURRENT_VERSION"
+
+          # Increment the patch version (vX.Y.Z -> vX.Y.(Z+1))
+          NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+          echo "Next version: $NEW_VERSION"
+
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
       - name: Update version references
         run: |
-          OLD_VERSION="v6.1.0"  # Replace with the actual current version
-          NEW_VERSION="v6.1.1"  # Replace with the new version you want to use
-          sed -i "s/ref=${OLD_VERSION}/ref=${NEW_VERSION}/g" path/to/your/file.tf
+          echo "Updating references from ${CURRENT_VERSION} to ${NEW_VERSION}"
+          # Update all files containing the old version
+          grep -rl "ref=${CURRENT_VERSION}" . | xargs sed -i "s/ref=${CURRENT_VERSION}/ref=${NEW_VERSION}/g"
 
       - name: Commit changes and create new branch
         run: |

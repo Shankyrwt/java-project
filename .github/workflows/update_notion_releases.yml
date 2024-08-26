@@ -108,16 +108,9 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          branch: ${{ env.BRANCH_NAME }}
-          base: certain
-          title: "Release ${{ github.event.inputs.sprint_name }} - ${{ env.NEW_VERSION }}"
-          body: |
-            This PR merges the branch `${{ env.BRANCH_NAME }}` into `certain`.
-
-            **Release Notes:**
-
-            ```
-            $(cat release_notes.md)
-            ```
-          labels: "release"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Automated Release PR"
+          body: "This PR includes the latest release notes."
+          base: certain  # Target branch
+          head: release/v${{ steps.version.outputs.new_version }}  # Source branch
+        

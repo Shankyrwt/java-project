@@ -112,5 +112,4 @@ jobs:
           title: "Automated Release PR"
           body: "This PR includes the latest release notes."
           base: certain  # Target branch
-          head: release/v${{ steps.version.outputs.new_version }}  # Source branch
-        
+          head: ${{ env.BRANCH_NAME }}  # Using the output from the previous job

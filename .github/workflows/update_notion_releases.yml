@@ -64,9 +64,9 @@ jobs:
 
       - name: Commit changes
         run: |
-          git checkout -b Release/${{ steps.prepare_tag.outputs.TAG_NAME }}
+          git checkout -b release/${{ steps.prepare_tag.outputs.TAG_NAME }}
           git commit -am "Updated version references to ${{ steps.prepare_tag.outputs.TAG_NAME }}"
-          git push origin Release/${{ steps.prepare_tag.outputs.TAG_NAME }}
+          git push origin release/${{ steps.prepare_tag.outputs.TAG_NAME }}
 
   notify:
     needs: update-version-references

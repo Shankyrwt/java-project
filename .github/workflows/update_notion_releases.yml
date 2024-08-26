@@ -24,7 +24,6 @@ jobs:
           pip install requests jira
 
       - name: Generate release notes
-        id: generate_notes
         env:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
@@ -94,31 +93,25 @@ jobs:
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
           git commit -am "Updated version references to ${NEW_VERSION}"
+          git pull origin "$BRANCH_NAME" --rebase
           git push origin "$BRANCH_NAME"
-
-  create-pull-request:
-    needs: update-version-references
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-          base: certain  # Merge into the "certain" branch
-          head: release/${{ env.NEW_VERSION }}  # From the newly created release branch
-          title: "Release ${{ env.NEW_VERSION }}"
+          branch: "release/${NEW_VERSION}"
+          base: "certain"  # Merge into the certain branch
+          title: "Release ${NEW_VERSION}"
           body: |
-            Release notes for ${{ env.NEW_VERSION }}:
-
-            ${{ steps.generate_notes.outputs.RELEASE_NOTES }}
+            This PR merges branch `release/${NEW_VERSION}` into `certain`.
+            Release notes:
+            $(cat release_notes.md)
 
   notify:
-    needs: create-pull-request
+    needs: update-version-references
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack Notification
         run: |
-          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${{ env.NEW_VERSION }}"
+          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${NEW_VERSION}"

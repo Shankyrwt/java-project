@@ -93,20 +93,7 @@ jobs:
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
           git commit -am "Updated version references to ${NEW_VERSION}"
-          git pull origin "$BRANCH_NAME" --rebase
           git push origin "$BRANCH_NAME"
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          branch: "release/${NEW_VERSION}"
-          base: "certain"  # Merge into the certain branch
-          title: "Release ${NEW_VERSION}"
-          body: |
-            This PR merges branch `release/${NEW_VERSION}` into `certain`.
-            Release notes:
-            $(cat release_notes.md)
 
   notify:
     needs: update-version-references

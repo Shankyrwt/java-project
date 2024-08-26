@@ -85,12 +85,14 @@ jobs:
           grep -rl "ref=${CURRENT_VERSION}" . | xargs sed -i "s/ref=${CURRENT_VERSION}/ref=${NEW_VERSION}/g"
 
       - name: Commit changes and create new branch
+        id: create_branch
         run: |
           BRANCH_NAME="release/${NEW_VERSION}"
           echo "Creating branch: $BRANCH_NAME"
           git checkout -b "$BRANCH_NAME"
           git commit -am "Updated version references to ${NEW_VERSION}"
           git push origin "$BRANCH_NAME"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
   create-pull-request:
     needs: update-version-references
@@ -103,12 +105,12 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-          commit-message: "Updated version references to ${NEW_VERSION}"
-          branch: "release/${NEW_VERSION}"
+          commit-message: "Updated version references to ${{ env.NEW_VERSION }}"
+          branch: ${{ env.BRANCH_NAME }}
           base: "certain"
-          title: "Release ${NEW_VERSION} - Merging into 'certain'"
+          title: "Release ${{ env.NEW_VERSION }} - Merging into 'certain'"
           body: |
             This PR includes the following updates:
-            - Updated version references to ${NEW_VERSION}
+            - Updated version references to ${{ env.NEW_VERSION }}
             - Release notes:
             $(cat release_notes.md)

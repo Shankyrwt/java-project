@@ -1,4 +1,5 @@
 name: Sprint Release Notes and Version Update
+
 on:
   workflow_dispatch:
     inputs:
@@ -7,11 +8,29 @@ on:
         required: true
 
 jobs:
-  prepare-tag:
+  create-release-notes:
     runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.prepare_tag.outputs.TAG_NAME }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install requests jira
+
+      - name: Generate release notes
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
+
       - name: Prepare unique tag name
         id: prepare_tag
         run: |
@@ -21,62 +40,42 @@ jobs:
           echo "TAG_NAME=${UNIQUE_TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Branch name will be: Release/${UNIQUE_TAG_NAME}"
 
-  create-release-notes:
-    needs: prepare-tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-      - name: Install dependencies
-        run: |
-          pip install requests jira
-      - name: Generate release notes
-        env:
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-        run: |
-          python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.prepare-tag.outputs.tag_name }}
+          tag_name: ${{ steps.prepare_tag.outputs.TAG_NAME }}
           release_name: Release ${{ github.event.inputs.sprint_name }}
           body_path: release_notes.md
           draft: false
           prerelease: false
 
   update-version-references:
-    needs: [prepare-tag, create-release-notes]
+    needs: create-release-notes
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Update version references
         run: |
-          NEW_VERSION="${{ needs.prepare-tag.outputs.tag_name }}"
-          find . -type f -name "*.tf" -exec sed -i "s/old_version/${NEW_VERSION}/g" {} +
+          OLD_VERSION="v6.1.0"  # Replace with the actual current version
+          NEW_VERSION="v6.1.1"  # Replace with the new version you want to use
+          sed -i "s/ref=${OLD_VERSION}/ref=${NEW_VERSION}/g" path/to/your/file.tf
+
       - name: Commit changes and create new branch
         run: |
-          BRANCH_NAME="Release/${{ needs.prepare-tag.outputs.tag_name }}"
+          BRANCH_NAME="release/${NEW_VERSION}"
           echo "Creating branch: $BRANCH_NAME"
-          git config user.name github-actions
-          git config user.email github-actions@github.com
           git checkout -b "$BRANCH_NAME"
-          git add .
-          git commit -m "Updated version references to ${{ needs.prepare-tag.outputs.tag_name }}"
+          git commit -am "Updated version references to ${NEW_VERSION}"
           git push origin "$BRANCH_NAME"
 
   notify:
-    needs: [prepare-tag, update-version-references]
+    needs: update-version-references
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack Notification
         run: |
-          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch Release/${{ needs.prepare-tag.outputs.tag_name }}"
+          echo "Release and version update completed for ${{ github.event.inputs.sprint_name }} on branch release/${NEW_VERSION}"

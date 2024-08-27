@@ -1,65 +1,49 @@
 import os
+import json
 from jira import JIRA
-import sys
-from jira.exceptions import JIRAError
 
 def get_jira_tickets(sprint_name):
+    """Fetch JIRA tickets for a specific sprint."""
     try:
-        # Connect to JIRA
-        jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN']))
+        jira_url = os.getenv('JIRA_URL')
+        jira_email = os.getenv('JIRA_EMAIL')
+        jira_api_token = os.getenv('JIRA_API_TOKEN')
         
-        # Define JQL query
+        jira = JIRA(server=jira_url, basic_auth=(jira_email, jira_api_token))
         jql_query = f'sprint = "{sprint_name}" AND project = "SCRUM" AND status = Done'
+        tickets = jira.search_issues(jql_query, maxResults=1000)
         
-        # Execute JQL query
-        issues = jira.search_issues(jql_query, maxResults=1000)
-        return issues
-    except JIRAError as e:
-        print(f"JIRA Error: {str(e)}")
-        return None
+        return tickets
     except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
+        print(f"Error fetching JIRA tickets: {e}")
         return None
 
 def categorize_ticket(ticket):
-    # Keywords for categorization
-    bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
-    config_keywords = ['config', 'configs']
+    """Categorize tickets based on custom field values."""
+    categories = set()
 
-    # Convert summary to lowercase for matching
-    summary = ticket.fields.summary.lower()
-    
-    # Determine categories
-    is_bug = any(keyword in summary for keyword in bug_keywords)
-    is_config = any(keyword in summary for keyword in config_keywords)
+    # Example of categorizing tickets; adjust based on your ticket structure
+    if hasattr(ticket.fields, 'customfield_12345'):  # Replace with your actual custom field
+        if "config" in ticket.fields.customfield_12345.lower():
+            categories.add("config")
+        elif "bug" in ticket.fields.customfield_12345.lower():
+            categories.add("bug")
+        elif "feature" in ticket.fields.customfield_12345.lower():
+            categories.add("feature")
 
-    # Ensure "configure" is not in the summary for config changes
-    if 'configure' in summary:
-        is_config = False
-
-    # Determine which category to assign
-    categories = []
-    if is_bug:
-        categories.append('bug')
-    if is_config:
-        categories.append('config')
-    
-    # If no categories matched, classify as feature
-    if not categories:
-        categories.append('feature')
-    
     return categories
 
 def generate_release_notes(sprint_name, version):
+    """Generate release notes based on JIRA tickets."""
     tickets = get_jira_tickets(sprint_name)
     if tickets is None:
         print("Failed to retrieve JIRA tickets.")
         return
-    
+
     features = []
     bug_fixes = []
     config_changes = []
-    repos = set()  # Set to store unique repository names
+    repos = set()
 
     for ticket in tickets:
         categories = categorize_ticket(ticket)
@@ -70,39 +54,28 @@ def generate_release_notes(sprint_name, version):
         if 'feature' in categories:
             features.append(f"- {ticket.key} {ticket.fields.summary}")
 
-        # Access the GitHub integration repository names
-        if hasattr(ticket.fields, 'customfield_12345'):  # Replace with actual field key if different
-            repo_name = ticket.fields.customfield_12345  # Access the repository name directly
-            if repo_name:
-                repos.add(repo_name)  # Add the repository name to the set
+        # Extract repository from custom field
+        if hasattr(ticket.fields, 'customfield_12345'):  # Replace with your actual custom field
+            repo_name = ticket.fields.customfield_12345
+            repos.add(repo_name)
 
-    # Add release notes content
     content = f"Release Notes for {sprint_name} (Version: {version})\n\n"
     
     if features:
-        content += "Features:\n"
-        content += "\n".join(features) + "\n\n"
-    
+        content += "Features:\n" + "\n".join(features) + "\n\n"
     if bug_fixes:
-        content += "Bug Fixes:\n"
-        content += "\n".join(bug_fixes) + "\n\n"
-
+        content += "Bug Fixes:\n" + "\n".join(bug_fixes) + "\n\n"
     if config_changes:
-        content += "Config Changes:\n"
-        content += "\n".join(config_changes) + "\n"
+        content += "Config Changes:\n" + "\n".join(config_changes) + "\n"
+    
+    content += "\nRepositories involved: " + ", ".join(repos) + "\n"
 
     print(content)
     
     with open("release_notes.md", "w") as f:
         f.write(content)
 
-    return repos  # Return the set of repositories for further processing
-
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python generate_release_notes.py <sprint_name> <version>")
-        sys.exit(1)
-    sprint_name = sys.argv[1]
-    version = sys.argv[2]
-    repos = generate_release_notes(sprint_name, version)
-    print(f"Repositories involved: {', '.join(repos)}")
+    sprint_name = os.getenv('SPRINT_NAME')
+    version = os.getenv('VERSION')
+    generate_release_notes(sprint_name, version)

@@ -23,12 +23,12 @@ def categorize_ticket(ticket):
     categories = set()
 
     # Example of categorizing tickets; adjust based on your ticket structure
-    if hasattr(ticket.fields, 'customfield_12345'):  # Replace with your actual custom field
-        if "config" in ticket.fields.customfield_12345.lower():
+    if hasattr(ticket.fields, 'repository'):  # Replace with your actual custom field
+        if "config" in ticket.fields.repository.lower():
             categories.add("config")
-        elif "bug" in ticket.fields.customfield_12345.lower():
+        elif "bug" in ticket.fields.repository.lower():
             categories.add("bug")
-        elif "feature" in ticket.fields.customfield_12345.lower():
+        elif "feature" in ticket.fields.repository.lower():
             categories.add("feature")
 
     return categories

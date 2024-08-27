@@ -82,20 +82,23 @@ jobs:
         run: |
           pip install requests jira
 
-      - name: Get repository names
-        id: get_repos
+      - name: Fetch repository names from Jira tickets
+        id: fetch_repos
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          python -c "import json; print(json.dumps([f'repo-{repo}.md' for repo in ['repo1', 'repo2']]))" > repos.json
-          echo "repos=$(cat repos.json)" >> $GITHUB_ENV
+          python -c "import os; from jira import JIRA; jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])); sprint_name = '${{ github.event.inputs.sprint_name }}'; issues = jira.search_issues(f'sprint = \\"{sprint_name}\\" AND project = \\"SCRUM\\" AND status = Done', maxResults=1000); repos = set(); [repos.add(branch['repository']['name']) for issue in issues for branch in issue.fields.branches]; print(':'.join(repos))" > repos.txt
 
       - name: Create GitHub Releases in Different Repositories
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          repos=$(cat repos.json)
-          for repo in $repos; do
-            REPO_NAME=$(basename $repo .md)
-            if [ -f "release_notes_$REPO_NAME.md" ]; then
-              gh release create ${{ github.event.inputs.version }} --repo $REPO_NAME --title "Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}" --notes-file release_notes_$REPO_NAME.md
+          repos=$(cat repos.txt)
+          IFS=':' read -r -a repo_array <<< "$repos"
+          for repo_name in "${repo_array[@]}"; do
+            if [ -f "release_notes_$repo_name.md" ]; then
+              gh release create ${{ github.event.inputs.version }} --repo $repo_name --title "Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}" --notes-file release_notes_$repo_name.md
             fi
           done

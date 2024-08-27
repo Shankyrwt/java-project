@@ -7,7 +7,7 @@ on:
         description: 'Sprint name (e.g., Sprint5)'
         required: true
       version:
-        description: 'Version for the release branch (e.g., v1.2.0)'
+        description: 'Release version (e.g., v1.2.0)'
         required: true
 
 jobs:
@@ -34,14 +34,10 @@ jobs:
         run: |
           python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
 
-      - name: Prepare unique tag name
-        id: prepare_tag
+      - name: Checkout main branch
         run: |
-          # Remove spaces and special characters, convert to lowercase
-          TAG_NAME=$(echo "${{ github.event.inputs.sprint_name }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-zA-Z0-9]/-/g')
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          UNIQUE_TAG_NAME="${TAG_NAME}-${TIMESTAMP}"
-          echo "TAG_NAME=v${UNIQUE_TAG_NAME}" >> $GITHUB_OUTPUT
+          git checkout main
+          git pull origin main
 
       - name: Prepare branch name
         id: prepare_branch
@@ -53,34 +49,33 @@ jobs:
         run: |
           git checkout -b ${{ steps.prepare_branch.outputs.BRANCH_NAME }}
 
-      - name: Pull latest changes from remote branch
-        run: |
-          git fetch origin
-          git pull origin ${{ steps.prepare_branch.outputs.BRANCH_NAME }} --rebase || true
-
       - name: Configure Git author
         run: |
-          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
-          git config --local user.name "${{ github.actor }}"
+          git config --local user.email "your-email@example.com"
+          git config --local user.name "Your Name"
 
       - name: Commit changes
         run: |
           git add release_notes.md
-          git commit -m "Add release notes for ${{ github.event.inputs.sprint_name }} - ${{ github.event.inputs.version }}" || echo "No changes to commit"
+          git commit -m "Add release notes for ${{ github.event.inputs.sprint_name }} - ${{ github.event.inputs.version }}"
 
       - name: Push new branch
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          git push origin ${{ steps.prepare_branch.outputs.BRANCH_NAME }} --force-with-lease
+          git push origin ${{ steps.prepare_branch.outputs.BRANCH_NAME }}
+
+      - name: Verify Release Notes Content
+        run: |
+          cat release_notes.md
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.prepare_tag.outputs.TAG_NAME }}
-          release_name: Release ${{ github.event.inputs.sprint_name }} - ${{ github.event.inputs.version }}
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}
           body_path: release_notes.md
           draft: false
           prerelease: false

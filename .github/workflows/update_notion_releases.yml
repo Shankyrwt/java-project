@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       sprint_name:
-        description: 'Sprint name (e.g., Sprint5)'
+        description: 'Sprint name (e.g., SCRUM Sprint 2)'
         required: true
       version:
         description: 'Release version (e.g., v1.2.0)'
@@ -32,7 +32,7 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
-          python generate_release_notes.py "${{ github.event.inputs.sprint_name }}"
+          python generate_release_notes.py "${{ github.event.inputs.sprint_name }}" "${{ github.event.inputs.version }}"
 
       - name: Checkout main branch
         run: |
@@ -51,12 +51,12 @@ jobs:
 
       - name: Configure Git author
         run: |
-          git config --local user.email "your-email@example.com"
-          git config --local user.name "Your Name"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "${{ github.actor }}"
 
       - name: Commit changes
         run: |
-          git add release_notes_*.md
+          git add release_notes.md
           git commit -m "Add release notes for ${{ github.event.inputs.sprint_name }} - ${{ github.event.inputs.version }}"
 
       - name: Push new branch
@@ -65,40 +65,13 @@ jobs:
         run: |
           git push origin ${{ steps.prepare_branch.outputs.BRANCH_NAME }}
 
-      - name: Verify Release Notes Content
-        run: |
-          cat release_notes_*.md
-
-  create-releases:
-    needs: create-release-notes
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: |
-          pip install requests jira
-
-      - name: Fetch repository names from Jira tickets
-        id: fetch_repos
-        env:
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-        run: |
-          python -c "import os; from jira import JIRA; jira = JIRA(server=os.environ['JIRA_URL'], basic_auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN'])); sprint_name = '${{ github.event.inputs.sprint_name }}'; issues = jira.search_issues(f'sprint = \\"{sprint_name}\\" AND project = \\"SCRUM\\" AND status = Done', maxResults=1000); repos = set(); [repos.add(branch['repository']['name']) for issue in issues for branch in issue.fields.branches]; print(':'.join(repos))" > repos.txt
-
-      - name: Create GitHub Releases in Different Repositories
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          repos=$(cat repos.txt)
-          IFS=':' read -r -a repo_array <<< "$repos"
-          for repo_name in "${repo_array[@]}"; do
-            if [ -f "release_notes_$repo_name.md" ]; then
-              gh release create ${{ github.event.inputs.version }} --repo $repo_name --title "Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}" --notes-file release_notes_$repo_name.md
-            fi
-          done
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false

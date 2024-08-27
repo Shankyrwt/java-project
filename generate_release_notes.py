@@ -1,6 +1,7 @@
 import os
 from jira import JIRA
 import sys
+from jira.exceptions import JIRAError
 
 def get_jira_tickets(sprint_name):
     try:
@@ -13,8 +14,11 @@ def get_jira_tickets(sprint_name):
         # Execute JQL query
         issues = jira.search_issues(jql_query, maxResults=1000)
         return issues
+    except JIRAError as e:
+        print(f"JIRA Error: {str(e)}")
+        return None
     except Exception as e:
-        print(f"An error occurred while fetching JIRA tickets: {str(e)}")
+        print(f"An unexpected error occurred: {str(e)}")
         return None
 
 def categorize_ticket(ticket):
@@ -51,11 +55,11 @@ def generate_release_notes(sprint_name, version):
     if tickets is None:
         print("Failed to retrieve JIRA tickets.")
         return
-
+    
     features = []
     bug_fixes = []
     config_changes = []
-    repo_notes = {}
+    repos = set()  # Set to store unique repository names
 
     for ticket in tickets:
         categories = categorize_ticket(ticket)
@@ -66,35 +70,33 @@ def generate_release_notes(sprint_name, version):
         if 'feature' in categories:
             features.append(f"- {ticket.key} {ticket.fields.summary}")
 
-        # Extract repository information (assuming branches field contains relevant data)
-        for branch in ticket.fields.branches:
-            repo_name = branch['repository']['name']
-            if repo_name not in repo_notes:
-                repo_notes[repo_name] = []
-            repo_notes[repo_name].append(f"- {ticket.key} {ticket.fields.summary}")
+        # Access the GitHub integration repository names
+        if hasattr(ticket.fields, 'customfield_12345'):  # Replace with actual field key if different
+            repo_name = ticket.fields.customfield_12345  # Access the repository name directly
+            if repo_name:
+                repos.add(repo_name)  # Add the repository name to the set
 
-    # Create release notes content
+    # Add release notes content
     content = f"Release Notes for {sprint_name} (Version: {version})\n\n"
     
     if features:
-        content += "Features:\n" + "\n".join(features) + "\n\n"
+        content += "Features:\n"
+        content += "\n".join(features) + "\n\n"
+    
     if bug_fixes:
-        content += "Bug Fixes:\n" + "\n".join(bug_fixes) + "\n\n"
+        content += "Bug Fixes:\n"
+        content += "\n".join(bug_fixes) + "\n\n"
+
     if config_changes:
-        content += "Config Changes:\n" + "\n".join(config_changes) + "\n"
+        content += "Config Changes:\n"
+        content += "\n".join(config_changes) + "\n"
 
     print(content)
     
-    # Write general release notes
     with open("release_notes.md", "w") as f:
         f.write(content)
 
-    # Write repository-specific release notes
-    for repo, notes in repo_notes.items():
-        repo_file = f"{repo}_release_notes.md"
-        with open(repo_file, "w") as f:
-            f.write(f"Release Notes for {repo} (Version: {version})\n\n")
-            f.write("\n".join(notes))
+    return repos  # Return the set of repositories for further processing
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
@@ -102,4 +104,5 @@ if __name__ == "__main__":
         sys.exit(1)
     sprint_name = sys.argv[1]
     version = sys.argv[2]
-    generate_release_notes(sprint_name, version)
+    repos = generate_release_notes(sprint_name, version)
+    print(f"Repositories involved: {', '.join(repos)}")

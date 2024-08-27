@@ -65,26 +65,13 @@ jobs:
         run: |
           git push origin ${{ steps.prepare_branch.outputs.BRANCH_NAME }}
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          commit-message: "Add release notes for ${{ github.event.inputs.sprint_name }} - ${{ github.event.inputs.version }}"
-          branch: ${{ steps.prepare_branch.outputs.BRANCH_NAME }}
-          base: main
-          title: "Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}"
-          body: |
-            This PR merges the changes for ${{ github.event.inputs.sprint_name }} with version ${{ github.event.inputs.version }} into the main branch.
-            Release Notes:
-            $(cat release_notes.md)
-
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          release_name: Release ${{ github.event.inputs.version }} for ${{ github.event.inputs.sprint_name }}
+          tag_name: ${{ steps.prepare_tag.outputs.TAG_NAME }}
+          release_name: Release ${{ github.event.inputs.sprint_name }}
           body_path: release_notes.md
           draft: false
           prerelease: false

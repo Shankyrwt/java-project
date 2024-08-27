@@ -22,33 +22,34 @@ def get_jira_tickets(sprint_name):
         return None
 
 def categorize_ticket(ticket):
-    # Keywords for categorization
     bug_keywords = ['fix', 'error', 'issue', 'correct', 'repair', 'resolve', 'revert']
     config_keywords = ['config', 'configs']
 
-    # Convert summary to lowercase for matching
     summary = ticket.fields.summary.lower()
     
-    # Determine categories
     is_bug = any(keyword in summary for keyword in bug_keywords)
     is_config = any(keyword in summary for keyword in config_keywords)
-
-    # Ensure "configure" is not in the summary for config changes
     if 'configure' in summary:
         is_config = False
 
-    # Determine which category to assign
     categories = []
     if is_bug:
         categories.append('bug')
     if is_config:
         categories.append('config')
-    
-    # If no categories matched, classify as feature
     if not categories:
         categories.append('feature')
     
     return categories
+
+def get_repository_name(ticket):
+    # Extract repository name from the GitHub information linked to the Jira ticket
+    if hasattr(ticket.fields, 'branches') and ticket.fields.branches:
+        # Assuming the repository name can be derived from the first branch
+        return ticket.fields.branches[0]['repository']['name']
+    else:
+        # Fallback if no branch information is available
+        return 'unknown-repo'
 
 def generate_release_notes(sprint_name):
     tickets = get_jira_tickets(sprint_name)
@@ -56,37 +57,39 @@ def generate_release_notes(sprint_name):
         print("Failed to retrieve JIRA tickets.")
         return
     
-    features = []
-    bug_fixes = []
-    config_changes = []
+    repo_tickets = {}
 
     for ticket in tickets:
+        repo_name = get_repository_name(ticket)
         categories = categorize_ticket(ticket)
+
+        if repo_name not in repo_tickets:
+            repo_tickets[repo_name] = {'features': [], 'bug_fixes': [], 'config_changes': []}
+
         if 'bug' in categories:
-            bug_fixes.append(f"- {ticket.key} {ticket.fields.summary}")
+            repo_tickets[repo_name]['bug_fixes'].append(f"- {ticket.key} {ticket.fields.summary}")
         if 'config' in categories:
-            config_changes.append(f"- {ticket.key} {ticket.fields.summary}")
+            repo_tickets[repo_name]['config_changes'].append(f"- {ticket.key} {ticket.fields.summary}")
         if 'feature' in categories:
-            features.append(f"- {ticket.key} {ticket.fields.summary}")
+            repo_tickets[repo_name]['features'].append(f"- {ticket.key} {ticket.fields.summary}")
 
-    content = f"Release Notes for {sprint_name}\n\n"
-    
-    if features:
-        content += "Features:\n"
-        content += "\n".join(features) + "\n\n"
-    
-    if bug_fixes:
-        content += "Bug Fixes:\n"
-        content += "\n".join(bug_fixes) + "\n\n"
+    for repo, tickets in repo_tickets.items():
+        content = f"Release Notes for {sprint_name}\n\n"
+        
+        if tickets['features']:
+            content += "Features:\n"
+            content += "\n".join(tickets['features']) + "\n\n"
+        
+        if tickets['bug_fixes']:
+            content += "Bug Fixes:\n"
+            content += "\n".join(tickets['bug_fixes']) + "\n\n"
 
-    if config_changes:
-        content += "Config Changes:\n"
-        content += "\n".join(config_changes) + "\n"
-    
-    print(content)
-    
-    with open("release_notes.md", "w") as f:
-        f.write(content)
+        if tickets['config_changes']:
+            content += "Config Changes:\n"
+            content += "\n".join(tickets['config_changes']) + "\n"
+        
+        with open(f"release_notes_{repo}.md", "w") as f:
+            f.write(content)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

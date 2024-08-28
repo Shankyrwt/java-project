@@ -76,6 +76,8 @@ jobs:
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push origin workflow/certain/${{ github.event.inputs.version }}
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
@@ -111,6 +113,8 @@ jobs:
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push origin workflow/certaua/${{ github.event.inputs.version }}
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Create merge request for certaua branch
         uses: peter-evans/create-pull-request@v4

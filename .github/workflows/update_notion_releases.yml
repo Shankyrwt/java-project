@@ -1,3 +1,15 @@
+name: Update Terraform Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint_name:
+        description: 'Sprint name (e.g., Sprint5)'
+        required: true
+      version:
+        description: 'Release version (e.g., v1.2.0)'
+        required: true
+
 jobs:
   update-version:
     runs-on: ubuntu-latest
@@ -43,7 +55,7 @@ jobs:
       - name: Checkout certain branch
         uses: actions/checkout@v2
         with:
-          repository: Shankyrwt/Ansible_playbook 
+          repository: Shankyrwt/Ansible_playbook
           ref: certain
           path: certain_repo
 
@@ -78,7 +90,7 @@ jobs:
       - name: Checkout certaua branch
         uses: actions/checkout@v2
         with:
-          repository: Shankyrwt/Ansible_playbook 
+          repository: Shankyrwt/Ansible_playbook
           ref: certaua
           path: certaua_repo
 

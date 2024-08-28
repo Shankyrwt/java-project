@@ -1,15 +1,3 @@
-name: Update Terraform Version
-
-on:
-  workflow_dispatch:
-    inputs:
-      sprint_name:
-        description: 'Sprint name (e.g., Sprint5)'
-        required: true
-      version:
-        description: 'Release version (e.g., v1.2.0)'
-        required: true
-
 jobs:
   update-version:
     runs-on: ubuntu-latest
@@ -55,40 +43,27 @@ jobs:
       - name: Checkout certain branch
         uses: actions/checkout@v2
         with:
-          repository: Shankyrwt/Ansible_playbook # Repository name for `certain` branch
+          repository: Shankyrwt/Ansible_playbook 
           ref: certain
           path: certain_repo
 
-      - name: Checkout certaua branch
-        uses: actions/checkout@v2
-        with:
-          repository: Shankyrwt/Ansible_playbook # Repository name for `certaua` branch
-          ref: certaua
-          path: certaua_repo
+      - name: Configure Git for certain branch
+        run: |
+          cd certain_repo
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
 
       - name: Replace version in all tf files in certain branch
         run: |
           find certain_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
-      - name: Replace version in all tf files in certaua branch
-        run: |
-          find certaua_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
-
       - name: Commit and push changes for certain branch
         run: |
           cd certain_repo
-          git checkout -b update/${{ github.event.inputs.version }}
+          git checkout -b certain/${{ github.event.inputs.version }}
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push origin update/${{ github.event.inputs.version }}
-
-      - name: Commit and push changes for certaua branch
-        run: |
-          cd ../certaua_repo
-          git checkout -b update/${{ github.event.inputs.version }}
-          git add .
-          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push origin update/${{ github.event.inputs.version }}
+          git push origin certain/${{ github.event.inputs.version }}
 
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
@@ -96,9 +71,34 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certain
-          head: update/${{ github.event.inputs.version }}
+          head: certain/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
+
+      - name: Checkout certaua branch
+        uses: actions/checkout@v2
+        with:
+          repository: Shankyrwt/Ansible_playbook 
+          ref: certaua
+          path: certaua_repo
+
+      - name: Configure Git for certaua branch
+        run: |
+          cd certaua_repo
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}"
+
+      - name: Replace version in all tf files in certaua branch
+        run: |
+          find certaua_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+
+      - name: Commit and push changes for certaua branch
+        run: |
+          cd certaua_repo
+          git checkout -b certaua/${{ github.event.inputs.version }}
+          git add .
+          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
+          git push origin certaua/${{ github.event.inputs.version }}
 
       - name: Create merge request for certaua branch
         uses: peter-evans/create-pull-request@v4
@@ -106,6 +106,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certaua
-          head: update/${{ github.event.inputs.version }}
+          head: certaua/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"

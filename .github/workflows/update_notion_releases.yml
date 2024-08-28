@@ -66,13 +66,13 @@ jobs:
           ref: certaua
           path: certaua_repo
 
-      - name: Replace version in certain branch
+      - name: Replace version in all tf files in certain branch
         run: |
-          sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/' certain_repo/path/to/terraform/file.tf
+          find certain_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
-      - name: Replace version in certaua branch
+      - name: Replace version in all tf files in certaua branch
         run: |
-          sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/' certaua_repo/path/to/terraform/file.tf
+          find certaua_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
       - name: Commit and push changes for certain branch
         run: |

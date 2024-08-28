@@ -55,14 +55,14 @@ jobs:
       - name: Checkout certain branch
         uses: actions/checkout@v2
         with:
-          repository: your-repo-certain # Repository name for `certain` branch
+          repository: Ansible_playbook # Repository name for `certain` branch
           ref: certain
           path: certain_repo
 
       - name: Checkout certaua branch
         uses: actions/checkout@v2
         with:
-          repository: your-repo-certaua # Repository name for `certaua` branch
+          repository: Ansible_playbook # Repository name for `certaua` branch
           ref: certaua
           path: certaua_repo
 
@@ -94,7 +94,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: your-repo-certain
+          repository: Ansible_playbook
           base: certain
           head: update/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
@@ -104,7 +104,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: your-repo-certaua
+          repository: Ansible_playbook
           base: certaua
           head: update/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"

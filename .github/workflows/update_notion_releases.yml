@@ -72,10 +72,10 @@ jobs:
       - name: Commit and push changes for certain branch
         run: |
           cd certain_repo
-          git checkout -b certain/${{ github.event.inputs.version }}
+          git checkout -b workflow/certain/${{ github.event.inputs.version }}
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push origin certain/${{ github.event.inputs.version }}
+          git push origin workflow/certain/${{ github.event.inputs.version }}
 
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
@@ -83,7 +83,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certain
-          head: certain/${{ github.event.inputs.version }}
+          head: workflow/certain/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
 
@@ -107,10 +107,10 @@ jobs:
       - name: Commit and push changes for certaua branch
         run: |
           cd certaua_repo
-          git checkout -b certaua/${{ github.event.inputs.version }}
+          git checkout -b workflow/certaua/${{ github.event.inputs.version }}
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push origin certaua/${{ github.event.inputs.version }}
+          git push origin workflow/certaua/${{ github.event.inputs.version }}
 
       - name: Create merge request for certaua branch
         uses: peter-evans/create-pull-request@v4
@@ -118,6 +118,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certaua
-          head: certaua/${{ github.event.inputs.version }}
+          head: workflow/certaua/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"

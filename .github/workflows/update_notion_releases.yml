@@ -12,7 +12,7 @@ on:
 
 jobs:
   update-version:
-    runs-on: ubuntu-latest\
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -52,7 +52,7 @@ jobs:
       - name: Create and checkout release branch
         run: |
           git checkout -b release/${{ github.event.inputs.version }}
-          git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git release/${{ github.event.inputs.version }}
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git release/${{ github.event.inputs.version }}
 
       # Step 1: Checkout the target repository
       - name: Checkout target repository
@@ -89,17 +89,16 @@ jobs:
           git add .  # Stage all changes
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
       
-      # Step 6: Push changes to the new branch in the target repository
+      # Step 6: Push changes for certain branch
       - name: Push changes for certain branch
         run: |
           cd certain_repo
-          git push https://${{ secrets.PAT_TOKEN }}:x-oauth-basic@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
-
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certain
           head: workflow/certain/${{ github.event.inputs.version }}
@@ -129,12 +128,12 @@ jobs:
           git checkout -b workflow/certaua/${{ github.event.inputs.version }}
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push https://${{ secrets.PAT_TOKEN }}:x-oauth-basic@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
       - name: Create merge request for certaua branch
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certaua
           head: workflow/certaua/${{ github.event.inputs.version }}

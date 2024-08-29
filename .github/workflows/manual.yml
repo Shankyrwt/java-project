@@ -6,6 +6,7 @@ on:
 jobs:
   create-branch:
     runs-on: ubuntu-latest
+    environment: env1  # Specify the environment to use its secrets
     steps:
       - name: Checkout current repository
         uses: actions/checkout@v3
@@ -24,7 +25,7 @@ jobs:
 
       - name: Push new branch
         env:
-          GITHUB_TOKEN: ${{ secrets.MYGITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.MYGITHUB_TOKEN }}  # Use the environment secret
         run: |
           cd ansible_playbook_repo
           git push origin workflow/certain/version1.1.1

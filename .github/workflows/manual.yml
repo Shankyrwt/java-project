@@ -24,7 +24,7 @@ jobs:
 
       - name: Push new branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MYGITHUB_TOKEN}}
         run: |
           cd ansible_playbook_repo
           git push origin workflow/certain/version1.1.1

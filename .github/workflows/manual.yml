@@ -1,0 +1,30 @@
+name: Checkout and Create Branch
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+
+      - name: Checkout Shankyrwt/Ansible_playbook repository
+        uses: actions/checkout@v3
+        with:
+          repository: Shankyrwt/Ansible_playbook
+          ref: certain
+          path: ansible_playbook_repo
+
+      - name: Create new branch
+        run: |
+          cd ansible_playbook_repo
+          git checkout -b workflow/certain/version1.1.1
+
+      - name: Push new branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd ansible_playbook_repo
+          git push origin workflow/certain/version1.1.1

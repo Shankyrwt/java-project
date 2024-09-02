@@ -93,7 +93,7 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v2
         with:
-          repository: Shankyrwt/Ansible-playbook  # Change to the actual target repository
+          repository: Shankyrwt/Ansible_playbook  # Change to the actual target repository
           ref: certain  # Checkout the target branch
           fetch-depth: 0
 
@@ -135,7 +135,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: Shankyrwt/Ansible_playbook  # Change to the actual target repository
-          ref: certain  # Checkout the target branch
+          ref: certaua  # Checkout the target branch
           fetch-depth: 0
 
       - name: Create pull request for certaua branch

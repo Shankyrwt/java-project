@@ -90,20 +90,13 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
-
-      - name: Checkout Ansible_playbook repository
-        run: |
-          cd Ansible_playbook
-          git checkout workflow/certain/${{ github.event.inputs.version }}
-
-          
       # Create pull request for certain branch
       - name: Create pull request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
           base: certain
-          head: workflow/certain/${{ github.event.inputs.version }}
+          branch: workflow/certain/${{ github.event.inputs.version }}  # Change `head` to `branch`
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
 
@@ -141,6 +134,6 @@ jobs:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certaua
-          head: workflow/certaua/${{ github.event.inputs.version }}
+          branch: workflow/certaua/${{ github.event.inputs.version }}  # Change `head` to `branch`
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"

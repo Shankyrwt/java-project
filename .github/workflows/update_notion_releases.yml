@@ -81,12 +81,13 @@ jobs:
         run: |
           find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
-      # Step 7: Create and push changes for certain branch
+      # Step 5: Create and push changes for certain branch
       - name: Create and push changes for certain branch
         run: |
-          git checkout -b workflow/certain/${{ github.event.inputs.version }}
-          git add --all
-          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
+          cd Ansible_playbook
+          git checkout -b workflow/certain/${{ github.event.inputs.version }}  # Create a new branch
+          git add .  # Stage all changes
+          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
       # Step 8: Create pull request for certain branch in Ansible_playbook repository

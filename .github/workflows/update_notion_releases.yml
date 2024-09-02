@@ -90,15 +90,16 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
+      # Create merge request for certain branch
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
-          repository: Shankyrwt/Ansible_playbook
           base: certain
-          head: workflow/certain/${{ github.event.inputs.version }}
+          branch: workflow/certain/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
+
 
       # Step 8: Checkout certaua branch
       - name: Checkout certaua branch

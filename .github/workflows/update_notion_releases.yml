@@ -134,7 +134,7 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v2
         with:
-          repository: Shankyrwt/Ansible-playbook  # Change to the actual target repository
+          repository: Shankyrwt/Ansible_playbook  # Change to the actual target repository
           ref: certain  # Checkout the target branch
           fetch-depth: 0
 

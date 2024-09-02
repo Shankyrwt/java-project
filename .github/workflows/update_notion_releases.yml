@@ -77,10 +77,10 @@ jobs:
           git config user.name "Shankyrwt"
       
       # Step 4: Replace version in all .tf files in certain branch
-      # Step 4: Replace version in all tf files in certain branch
       - name: Replace version in all tf files in certain branch
         run: |
-          find certain -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+          cd Ansible_playbook  # Ensure you're in the right directory
+          find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
       # Step 7: Create and push changes for certain branch
       - name: Create and push changes for certain branch
@@ -120,9 +120,10 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
 
-      - name: Replace version in all .tf files in certaua branch
+      - name: Replace version in all tf files in certain branch
         run: |
-          find Ansible_playbook -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+          cd Ansible_playbook  # Ensure you're in the right directory
+          find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
       - name: Commit and push changes for certaua branch
         run: |

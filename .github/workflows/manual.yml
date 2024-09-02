@@ -24,12 +24,12 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "Shankyrwt"
+          git config --global user.email "shankarwt777@gmail.com
 
       - name: Push new branch
         env:
           GIT_AUTH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
         run: |
           cd ansible_playbook_repo
-          git push https://github-actions[bot]:$GIT_AUTH_TOKEN@github.com/Shankyrwt/Ansible_playbook.git workflow/github-workflow/certain/version1.1.1
+          git push https://$GIT_AUTH_TOKEN@github.com/Shankyrwt/Ansible_playbook.git workflow/github-workflow/certain/version1.1.1

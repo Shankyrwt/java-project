@@ -90,16 +90,15 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
-      # Create merge request for certain branch
-      - name: Create merge request for certain branch
+      # Create pull request for certain branch
+      - name: Create pull request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
           base: certain
-          branch: workflow/certain/${{ github.event.inputs.version }}
+          head: workflow/certain/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
-
 
       # Step 8: Checkout certaua branch
       - name: Checkout certaua branch
@@ -107,16 +106,19 @@ jobs:
           cd Ansible_playbook
           git checkout certaua
 
+      # Step 9: Configure Git for certaua branch
       - name: Configure Git for certaua branch
         run: |
           cd Ansible_playbook
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
 
+      # Step 10: Replace version in all .tf files in certaua branch
       - name: Replace version in all .tf files in certaua branch
         run: |
           find Ansible_playbook -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
+      # Step 11: Commit and push changes for certaua branch
       - name: Commit and push changes for certaua branch
         run: |
           cd Ansible_playbook
@@ -125,7 +127,8 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
-      - name: Create merge request for certaua branch
+      # Create pull request for certaua branch
+      - name: Create pull request for certaua branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}

@@ -100,20 +100,25 @@ jobs:
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
 
-      # Step 9: Checkout certaua branch
+      # Step 9: Checkout certaua branch in target repository
       - name: Checkout certaua branch
         run: |
+          cd Ansible_playbook
           git checkout certaua
 
+      # Step 10: Configure Git for the certaua branch
       - name: Configure Git for certaua branch
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name "${{ github.actor }}"
+          cd Ansible_playbook
+          git config user.email "shankarwt777@gmail.com"
+          git config user.name "Shankyrwt"
 
+      # Step 11: Replace version in all .tf files in certaua branch
       - name: Replace version in all .tf files in certaua branch
         run: |
           find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
+      # Step 12: Commit and push changes for certaua branch
       - name: Commit and push changes for certaua branch
         run: |
           git checkout -b workflow/certaua/${{ github.event.inputs.version }}
@@ -121,7 +126,8 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
-      - name: Create pull request for certaua branch in Ansible_playbook repository
+      # Step 13: Create pull request for certaua branch in Ansible_playbook repository
+      - name: Create pull request for certaua branch
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}

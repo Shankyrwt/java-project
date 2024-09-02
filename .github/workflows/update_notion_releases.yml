@@ -90,6 +90,13 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
+      - name: Checkout target repository
+        uses: actions/checkout@v2
+        with:
+          repository: Shankyrwt/Ansible-playbook  # Change to the actual target repository
+          ref: certain  # Checkout the target branch
+          fetch-depth: 0
+
       # Create pull request for certain branch
       - name: Create pull request for certain branch
         uses: peter-evans/create-pull-request@v4

@@ -78,6 +78,10 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
+      - name: checkout target repository
+        run: |
+          cd Ansible_playbook
+
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:

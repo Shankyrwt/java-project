@@ -7,29 +7,17 @@ jobs:
   create-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current repository
-        uses: actions/checkout@v3
-
-      - name: Checkout Shankyrwt/Ansible_playbook repository
-        uses: actions/checkout@v3
-        with:
-          repository: Shankyrwt/Ansible_playbook
-          ref: certain
-          path: ansible_playbook_repo
+      - name: Clone the repository
+        run: |
+          git clone https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git
+          cd Ansible_playbook
 
       - name: Create new branch
         run: |
-          cd ansible_playbook_repo
+          cd Ansible_playbook
           git checkout -b workflow/github-workflow/certain/version1.1.1
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "Shankyrwt"
-          git config --global user.email "shankarwt777@gmail.com"
-
       - name: Push new branch
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
         run: |
-          cd ansible_playbook_repo
-          git push https://$GIT_AUTH_TOKEN@github.com/Shankyrwt/Ansible_playbook.git workflow/github-workflow/certain/version1.1.1
+          cd Ansible_playbook
+          git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/github-workflow/certain/version1.1.1

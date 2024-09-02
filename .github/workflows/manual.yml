@@ -20,12 +20,16 @@ jobs:
       - name: Create new branch
         run: |
           cd ansible_playbook_repo
-          git checkout -b workflow/certain/version1.1.1
+          git checkout -b workflow/github-workflow/certain/version1.1.1
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Push new branch
         env:
-          # Use your custom token instead of the auto-generated GITHUB_TOKEN
           GIT_AUTH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
         run: |
           cd ansible_playbook_repo
-          git push https://$GIT_AUTH_TOKEN@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/version1.1.1
+          git push https://github-actions[bot]:$GIT_AUTH_TOKEN@github.com/Shankyrwt/Ansible_playbook.git workflow/github-workflow/certain/version1.1.1

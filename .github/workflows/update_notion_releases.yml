@@ -85,9 +85,9 @@ jobs:
       - name: Create and push changes for certain branch
         run: |
           cd Ansible_playbook
-          git checkout -b workflow/certain/${{ github.event.inputs.version }}  # Create a new branch
-          git add --all  # Stage all changes, excluding Ansible_playbook directory if needed
-          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
+          git checkout -b workflow/certain/${{ github.event.inputs.version }}
+          git add --all
+          git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
       # Create pull request for certain branch
@@ -120,7 +120,7 @@ jobs:
         run: |
           cd Ansible_playbook
           git checkout -b workflow/certaua/${{ github.event.inputs.version }}
-          git add --all  # Stage all changes
+          git add --all
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 

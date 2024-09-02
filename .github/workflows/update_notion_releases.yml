@@ -77,9 +77,10 @@ jobs:
           git config user.name "Shankyrwt"
       
       # Step 4: Replace version in all .tf files in certain branch
-      - name: Replace version in all .tf files in certain branch
+      # Step 4: Replace version in all tf files in certain branch
+      - name: Replace version in all tf files in certain branch
         run: |
-          find Ansible_playbook -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+          find certain -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
       # Step 7: Create and push changes for certain branch
       - name: Create and push changes for certain branch

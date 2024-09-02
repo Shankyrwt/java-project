@@ -15,7 +15,7 @@ on:
 
 jobs:
   update-version:
-    runs-on: ubuntu-latest\
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout main repository
         uses: actions/checkout@v2
@@ -45,97 +45,77 @@ jobs:
           cat release_notes.md >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Checkout main branch
+      # Step 1: Clone the target repository using the PAT
+      - name: Clone the target repository
         run: |
-          git checkout main
-          git pull origin main
+          git clone https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git
+          cd Ansible_playbook
 
-      - name: Create and checkout release branch
-        run: |
-          git checkout -b release/${{ github.event.inputs.version }}
-          git push https://${{ secrets.MYGITHUB_TOKEN }}@github.com/${{ github.repository }}.git release/${{ github.event.inputs.version }}
-
-      # Step 1: Checkout the target repository
-      - name: Checkout target repository
-        uses: actions/checkout@v2
-        with:
-          repository: Shankyrwt/Ansible_playbook  # The target repository
-          path: target_repo  # Local path where the target repository will be checked out
-      
-      # Step 2: Checkout the certain branch from the target repository
+      # Step 2: Checkout certain branch
       - name: Checkout certain branch
-        uses: actions/checkout@v2
-        with:
-          repository: Shankyrwt/Ansible_playbook  # The target repository again
-          ref: certain  # Specify the certain branch to check out
-          path: certain_repo  # Local path for the certain branch
-      
+        run: |
+          cd Ansible_playbook
+          git checkout certain
+
       # Step 3: Configure Git for the certain branch
       - name: Configure Git for certain branch
         run: |
-          cd certain_repo
+          cd Ansible_playbook
           git config user.email "shankarwt777@gmail.com"
           git config user.name "Shankyrwt"
       
-      # Step 4: Replace version in all tf files in certain branch
-      - name: Replace version in all tf files in certain branch
+      # Step 4: Replace version in all .tf files in certain branch
+      - name: Replace version in all .tf files in certain branch
         run: |
-          find certain_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
-      
-      # Step 5: Commit changes to the certain branch
-      - name: Commit changes for certain branch
+          find Ansible_playbook -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+
+      # Step 5: Create and push changes for certain branch
+      - name: Create and push changes for certain branch
         run: |
-          cd certain_repo
+          cd Ansible_playbook
           git checkout -b workflow/certain/${{ github.event.inputs.version }}  # Create a new branch
           git add .  # Stage all changes
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"  # Commit the changes
-      
-      # Step 6: Push changes to the new branch in the target repository
-      - name: Push changes for certain branch
-        run: |
-          cd certain_repo
-          git push https://${{ secrets.MYGITHUB_TOKEN }}:x-oauth-basic@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
-
+          git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
       - name: Create merge request for certain branch
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.MYGITHUB_TOKEN }}
+          token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certain
           head: workflow/certain/${{ github.event.inputs.version }}
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
 
+      # Step 6: Checkout certaua branch
       - name: Checkout certaua branch
-        uses: actions/checkout@v2
-        with:
-          repository: Shankyrwt/Ansible_playbook
-          ref: certaua
-          path: certaua_repo
+        run: |
+          cd Ansible_playbook
+          git checkout certaua
 
       - name: Configure Git for certaua branch
         run: |
-          cd certaua_repo
+          cd Ansible_playbook
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
 
-      - name: Replace version in all tf files in certaua branch
+      - name: Replace version in all .tf files in certaua branch
         run: |
-          find certaua_repo -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
+          find Ansible_playbook -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
       - name: Commit and push changes for certaua branch
         run: |
-          cd certaua_repo
+          cd Ansible_playbook
           git checkout -b workflow/certaua/${{ github.event.inputs.version }}
           git add .
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
-          git push https://${{ secrets.MYGITHUB_TOKEN }}:x-oauth-basic@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
+          git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
       - name: Create merge request for certaua branch
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.MYGITHUB_TOKEN }}
+          token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
           repository: Shankyrwt/Ansible_playbook
           base: certaua
           head: workflow/certaua/${{ github.event.inputs.version }}

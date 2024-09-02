@@ -95,9 +95,9 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
-          repository: Shankyrwt/Ansible_playbook
-          base: certain
-          branch: workflow/certain/${{ github.event.inputs.version }}
+          repository: Shankyrwt/Ansible_playbook  # Explicitly specify the target repository
+          base: certain  # This is the branch you want to merge into
+          head: workflow/certain/${{ github.event.inputs.version }}  # This is your new branch with changes
           title: "Update Terraform ref to version ${{ github.event.inputs.version }}"
           body: "${{ env.RELEASE_NOTES }}"
 

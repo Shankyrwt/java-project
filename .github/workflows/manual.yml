@@ -12,6 +12,11 @@ jobs:
           git clone https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git
           cd Ansible_playbook
 
+      - name: Checkout certain branch
+        run: |
+          cd Ansible_playbook
+          git checkout certain
+
       - name: Create new branch
         run: |
           cd Ansible_playbook

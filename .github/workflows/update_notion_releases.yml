@@ -96,9 +96,13 @@ jobs:
         run: sudo apt-get install gh -y
 
       # Step 9: Create pull request for certain branch in Ansible_playbook repository using GitHub CLI
-      - name: Create pull request for certain branch
+      - name: Create pull request for certain branch in Ansible_playbook repository
         run: |
           gh pr create --repo Shankyrwt/Ansible_playbook --base certain --head workflow/certain/${{ github.event.inputs.version }} --title "Update Terraform ref to version ${{ github.event.inputs.version }}" --body "${{ env.RELEASE_NOTES }}"
+        env:
+          GH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
+
+
 
       # Step 10: Checkout certaua branch
       - name: Checkout certaua branch
@@ -129,6 +133,8 @@ jobs:
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
       # Step 14: Create pull request for certaua branch in Ansible_playbook repository using GitHub CLI
-      - name: Create pull request for certaua branch
+      - name: Create pull request for certaua branch in Ansible_playbook repository
         run: |
           gh pr create --repo Shankyrwt/Ansible_playbook --base certaua --head workflow/certaua/${{ github.event.inputs.version }} --title "Update Terraform ref to version ${{ github.event.inputs.version }}" --body "${{ env.RELEASE_NOTES }}"
+        env:
+          GH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}

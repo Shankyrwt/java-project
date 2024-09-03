@@ -2,7 +2,6 @@ Release Notes for SCRUM Sprint 2
 
 Features:
 - SCRUM-11 Configure and Monitor Alerts on All RDS Nodes with Email and SMS Notifications
-- SCRUM-10 Renamed Checkov Scan & Added Terraform linter to Github Actions
 
 Bug Fixes:
 - SCRUM-13 reverted sampling changes from DD config

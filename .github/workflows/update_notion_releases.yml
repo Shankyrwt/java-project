@@ -1,6 +1,3 @@
-permissions:
-  contents: write
-
 name: Update Terraform Version
 
 on:

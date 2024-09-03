@@ -51,51 +51,53 @@ jobs:
           git checkout main
           git pull origin main
 
-      - name: Configure Git for certain branch
-        run: |
-          git config user.email "shankarwt777@gmail.com"
-          git config user.name "Shankyrwt"
-
-      # Step 2: Create and commit the releasenotes.md file
+      # Step 2: Create and commit the release_notes.md file
       - name: Commit release notes to main branch
         run: |
-          echo "${{ env.RELEASE_NOTES }}" > releasenotes.md
-          git add releasenotes.md
+          echo "${{ env.RELEASE_NOTES }}" > release_notes.md
+          git add release_notes.md
           git commit -m "Add release notes for ${{ github.event.inputs.version }}"
           git push origin main
 
-      # Step 3: Create and checkout release branch
+      # Step 3: Create a new GitHub release
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ github.event.inputs.version }} --title "Release ${{ github.event.inputs.version }}" --notes "${{ env.RELEASE_NOTES }}" --target main
+        env:
+          GH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
+
+      # Step 4: Create and checkout release branch
       - name: Create and checkout release branch
         run: |
           git checkout -b release/${{ github.event.inputs.version }}
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}.git release/${{ github.event.inputs.version }}
 
-      # Step 4: Clone the target repository using the PAT
+      # Step 5: Clone the target repository using the PAT
       - name: Clone the target repository
         run: |
           git clone https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git
           cd Ansible_playbook
 
-      # Step 5: Checkout certain branch in target repository
+      # Step 6: Checkout certain branch in target repository
       - name: Checkout certain branch
         run: |
           cd Ansible_playbook
           git checkout certain
 
-      # Step 6: Configure Git for the certain branch
+      # Step 7: Configure Git for the certain branch
       - name: Configure Git for certain branch
         run: |
           cd Ansible_playbook
           git config user.email "shankarwt777@gmail.com"
           git config user.name "Shankyrwt"
       
-      # Step 7: Replace version in all .tf files in certain branch
+      # Step 8: Replace version in all .tf files in certain branch
       - name: Replace version in all .tf files in certain branch
         run: |
           cd Ansible_playbook
           find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
-      # Step 8: Create and push changes for certain branch
+      # Step 9: Create and push changes for certain branch
       - name: Create and push changes for certain branch
         run: |
           cd Ansible_playbook
@@ -104,37 +106,37 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certain/${{ github.event.inputs.version }}
 
-      # Step 9: Install GitHub CLI
+      # Step 10: Install GitHub CLI
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
 
-      # Step 10: Create pull request for certain branch in Ansible_playbook repository using GitHub CLI
+      # Step 11: Create pull request for certain branch in Ansible_playbook repository using GitHub CLI
       - name: Create pull request for certain branch in Ansible_playbook repository
         run: |
           gh pr create --repo Shankyrwt/Ansible_playbook --base certain --head workflow/certain/${{ github.event.inputs.version }} --title "Update Terraform ref to version ${{ github.event.inputs.version }}" --body "${{ env.RELEASE_NOTES }}"
         env:
           GH_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
 
-      # Step 11: Checkout certaua branch
+      # Step 12: Checkout certaua branch
       - name: Checkout certaua branch
         run: |
           cd Ansible_playbook
           git checkout certaua
 
-      # Step 12: Configure Git for certaua branch
+      # Step 13: Configure Git for certaua branch
       - name: Configure Git for certaua branch
         run: |
           cd Ansible_playbook
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
 
-      # Step 13: Replace version in all .tf files in certaua branch
+      # Step 14: Replace version in all .tf files in certaua branch
       - name: Replace version in all .tf files in certaua branch
         run: |
           cd Ansible_playbook
           find . -type f -name "*.tf" -exec sed -i 's/ref=v[0-9.]*/ref=${{ github.event.inputs.version }}/g' {} +
 
-      # Step 14: Commit and push changes for certaua branch
+      # Step 15: Commit and push changes for certaua branch
       - name: Commit and push changes for certaua branch
         run: |
           cd Ansible_playbook
@@ -143,7 +145,7 @@ jobs:
           git commit -m "Update Terraform ref to version ${{ github.event.inputs.version }}"
           git push https://${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}@github.com/Shankyrwt/Ansible_playbook.git workflow/certaua/${{ github.event.inputs.version }}
 
-      # Step 15: Create pull request for certaua branch in Ansible_playbook repository using GitHub CLI
+      # Step 16: Create pull request for certaua branch in Ansible_playbook repository using GitHub CLI
       - name: Create pull request for certaua branch in Ansible_playbook repository
         run: |
           gh pr create --repo Shankyrwt/Ansible_playbook --base certaua --head workflow/certaua/${{ github.event.inputs.version }} --title "Update Terraform ref to version ${{ github.event.inputs.version }}" --body "${{ env.RELEASE_NOTES }}"
